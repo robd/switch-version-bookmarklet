@@ -12,7 +12,9 @@
   </head>
   <body>
     <h1>Generate a bookmarklet to load docs sites at your preferred version.</h1>
-    <p>1) Choose your preferred version of libraries at the following sites</p>
+    <p>This page lets you generate a bookmarklet which will take you to your preferred version when you are on a page on the sites below. It simply detects the version in the url and updates with your chosen version.</p>
+    <p>For example, assume you choose version 1.9.3 for ruby-doc.org, and generate the bookmarklet. If you end up on a 2.1 doc page eg <a href="http://ruby-doc.org/core-2.1.0/Struct.html#method-i-members">http://ruby-doc.org/core-2.1.0/Struct.html#method-i-members</a>, pressing the bookmarklet will take you to <a href="http://ruby-doc.org/core-1.9.3/Struct.html#method-i-members">http://ruby-doc.org/core-1.9.3/Struct.html#method-i-members</a>.</p>
+    <p>1) Choose your preferred version of libraries at the following sites (or type in the version if it is not listed)</p>
     <div id="sites"></div>
     <p id="supported-versions">(Choose versions above)</p>
     <p>2) Name your bookmarklet<input id="bookmarklet-text" type="text" value="Switch docs"/></p>
