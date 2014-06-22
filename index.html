@@ -1,29 +1,79 @@
 <html>
-<body>
-<p>Choose versions:</p>
+  <head>
+    <title>Generate a bookmarklet to load docs sites at your preferred version.</title>
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/normalize/3.0.1/normalize.min.css">
 
-<select id="rubyVersion">
-  <option>Ruby version</option>
-  <option>2.1.2</option>
-  <option>2.1.1</option>
-  <option>2.1.0</option>
-  <option>2.0.0</option>
-  <option>1.9.3</option>
-  <option>1.9.2</option>
-  <option>1.9.1</option>
-  <option>1.8.7</option>
-  <option>1.8.6</option>
-</select>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style type="text/css">
+      body { margin: 2em }
+      .site, #supported-versions { margin: 1em }
+      a.version, input { margin-left: .5em;}
+    </style>
+  </head>
+  <body>
+    <h1>Generate a bookmarklet to load docs sites at your preferred version.</h1>
+    <p>1) Choose your preferred version of libraries at the following sites</p>
+    <div id="sites"></div>
+    <p id="supported-versions">(Choose versions above)</p>
+    <p>2) Name your bookmarklet<input id="bookmarklet-text" type="text" value="Switch docs"/></p>
+    <p>3) Drag bookmarklet to bookmarks bar: <a id="bookmarkletLink">Switch docs</a></p>
+    <script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+    <script>
+      RegExp.escape = function(s) {
+        return s.replace(/[$-\/?[-^{|}]/g, '\\$&');
+      }
 
-<a id="bookmarkletLink" href="javascript:(function(){ var rubyVersion=''; var newUrl=window.location.href.replace(/(\d+\.\d+\.\d+)/, rubyVersion); window.location.href=newUrl; })();">@ Ruby</a>
+      function recompileBookmarklet() {
+        $("#supported-versions").text("Chosen: " +
+          $.map($("input.chosen-version"), function(input, index) {
+            if ($(input).val()) return $(input).data('siteUrl') + ":" + $(input).val();
+          }).join(', ')
+        );
+        var regexesAndVersions = $.map($("input.chosen-version"), function(input, index) {
+          var chosenVersion = $(input).val();
+          if (chosenVersion) {
+            var compiledRegex = "/(.*" + RegExp.escape($(input).data('site-url')) + ".*)(" + $(input).data('version-regex') + ")(.*)/";
+            return "[" + compiledRegex + ",\"" + chosenVersion + "\"]";
+          }
+        });
 
-<script>
-document.getElementById('rubyVersion').onchange = function(e){
-    if (!e) var e = window.event;
-    var selectedRubyVersion = this.options[this.selectedIndex].value;
-    document.getElementById('bookmarkletLink').href = document.getElementById('bookmarkletLink').href.replace(/rubyVersion='.*'/,"rubyVersion='" + selectedRubyVersion + "'");
-    document.getElementById('bookmarkletLink').innerHTML = "@ Ruby " + selectedRubyVersion;
-};
-</script>
-</body>
+        if (regexesAndVersions.length > 0) {
+          $("#bookmarkletLink").attr("href","javascript:(function(){var v=[" + regexesAndVersions.join(',') + "];for(var i=0;i<v.length;i++){var newUrl=window.location.href.replace(v[i][0],\"$1\"+v[i][1]+\"$3\"); if (window.location.href!=newUrl)window.location.href=newUrl;}})();");
+        } else {
+           $("#bookmarkletLink").removeAttr('href');
+        }
+      }
+      var sites = [
+        { url: "ruby-doc.org", versions: ["2.1.2", "2.1.1", "2.1.0", "2.0.0", "1.9.3", "1.9.2", "1.9.1", "1.8.7", "1.8.6"], versionRegex: /\d\.\d\.\d/ },
+        { url: "rubydoc.info/stdlib", versions: ["2.1.0", "2.0.0", "1.9.3", "1.9.2", "1.8.7"], versionRegex: /\d\.\d\.\d/ },
+        { url: "apidock.com/ruby", versions: ["1_9_3_392", "1_9_3_125", "1_9_2_180", "1_9_1_378", "1_8_7_330", "1_8_7_72", "1_8_6_287"], versionRegex: /\d_\d_\d_\d{1,3}/ },
+      ];
+
+      $.each(sites, function(index, site) {
+        var siteDiv = $("<div/>", {class: "site"})
+        $("#sites").append(siteDiv);
+        siteDiv.append($("<span/>", {text : site.url}));
+
+        console.dir(site.versionRegex.source);
+        // Yeah, size with a capital S - http://stackoverflow.com/questions/19576191/how-can-i-set-the-size-attribute-for-the-element-input-using-an-attribute-ob/19576388#19576388
+        var versionTextbox = $("<input/>", {type : "text", Size: "8", class: 'chosen-version', 'data-site-url': site.url, 'data-version-regex': site.versionRegex.source});
+        versionTextbox.change(function(e){
+          if (!e) var e = window.event;
+          recompileBookmarklet();
+        });
+        siteDiv.append(versionTextbox);
+
+        $.each(site.versions, function(index, version) {
+          var capturedVersionTextbox = versionTextbox;
+          var link = $("<a/>", {text : version, href: "#", class: "version"});
+          link.click(function(e) {e.preventDefault();capturedVersionTextbox.val(version);capturedVersionTextbox.change();});
+          siteDiv.append(link);
+        });
+      });
+
+      $('#bookmarklet-text').change(function(){
+        $("#bookmarkletLink").text($('#bookmarklet-text').val());
+      });
+    </script>
+  </body>
 </html>
